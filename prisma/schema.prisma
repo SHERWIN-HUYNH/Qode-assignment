@@ -27,7 +27,6 @@ model Image {
 model Comment {
   id         String   @id @default(uuid())
   imageId    String   @map("image_id")
-  authorName String   @map("author_name")
   content    String
   createdAt  DateTime @default(now()) @map("created_at")
   

@@ -21,11 +21,15 @@ export default function PhotoCard({ photo }: PhotoCardProps) {
       </Link>
       <div className="p-5 flex-1 flex flex-col">
         <p className="text-sm text-gray-600 leading-relaxed mb-4 flex-1 line-clamp-3">
-          {photo.caption}
+          {photo.caption || 'No caption'}
         </p>
         <Link href={`/photo/${photo.id}`} className="flex items-center text-xs font-bold text-indigo-600 cursor-pointer hover:underline">
           <MessageCircle className="w-4 h-4 mr-1" />
-          View {photo.commentsCount} comments
+          {photo.commentsCount === 0
+            ? 'No comments yet'
+            : photo.commentsCount === 1
+            ? 'View 1 comment'
+            : `View ${photo.commentsCount} comments`}
         </Link>
       </div>
     </article>
