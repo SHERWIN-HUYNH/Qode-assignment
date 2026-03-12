@@ -1,45 +1,97 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
-// import Footer from '@/components/Footer';
 import CommentSection from '@/components/CommentSection';
 import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
-import { Photo, Comment } from '@/types';
-
-// Mock data for the detail page
-const mockPhoto: Photo = {
-  id: '1',
-  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCn2DWCuojo9IpsrA9NK5s7Yl4gxBigyBJT39YBX51Hudr1bAJsqeu2bG3VtAL4WGT_ObtKKDUNLRQnZjL8997B4ZSrH9L-C8ahydSlR0gPmm4FblRy_3mIl4-b7p6Kgb0mLPcHczUXbb_gkOGWcgF5GQMQ642Ad4FvIKvy1-aBlbqLdAl3xgGdOA0JdxgmMlgbAcc_qJdJT6r0T-Qb3S0ob72utzAYudUj1YYAl1pH1Sk45768jPRbhHTvdt-6SO-v3xdyKa3ZpNGt',
-  caption: 'Beautiful mountain landscape at sunrise',
-  commentsCount: 48,
-  createdAt: new Date().toISOString(),
-};
-
-const mockComments: Comment[] = [
-  { id: 'c1', imageId: '1', content: 'The lighting in this is absolutely incredible. What lens did you use for this shot?', createdAt: new Date().toISOString() },
-  { id: 'c2', imageId: '1', content: 'Stunning composition. The reflection is crystal clear.', createdAt: new Date().toISOString() },
-  { id: 'c3', imageId: '1', content: 'This makes me want to visit this place immediately. Great work!', createdAt: new Date().toISOString() },
-];
+import { ImageWithComments } from '@/types';
+import { Spin } from 'antd';
 
 export default function PhotoDetail() {
+  const params = useParams();
+  const imageId = params.id as string;
+  
+  const [image, setImage] = useState<ImageWithComments | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchImage = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/images/${imageId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
+      const data = await response.json();
+      setImage(data.image);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load image');
+    } finally {
+      setLoading(false);
+    }
+  }, [imageId]);
+
+  useEffect(() => {
+    if (imageId) {
+      fetchImage();
+    }
+  }, [imageId, fetchImage]);
+
+  const handleCommentAdded = () => {
+    // Refresh the image data to show new comment
+    fetchImage();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Spin size="large" />
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !image) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 text-lg">{error || 'Image not found'}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const caption = image.comments[0]?.content || 'No caption';
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Left Column: Photo Display */}
+          {/* Photo Display */}
           <div className="lg:col-span-8 space-y-6">
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
               <div className="w-full aspect-4/3 bg-gray-100 relative">
                 <Image
-                  src={mockPhoto.imageUrl}
-                  alt={mockPhoto.caption}
+                  src={image.cloudinaryUrl}
+                  alt={caption}
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div className="p-8">
+                <p className="text-gray-800 mb-4">{caption}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-6">
                     <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors">
@@ -47,7 +99,7 @@ export default function PhotoDetail() {
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors">
                       <MessageCircle className="w-5 h-5" />
-                      <span className="font-bold">{mockPhoto.commentsCount} comments</span>
+                      <span className="font-bold">{image.comments.length} comments</span>
                     </button>
                   </div>
                   <div className="flex gap-4">
@@ -63,12 +115,14 @@ export default function PhotoDetail() {
             </div>
           </div>
           
-          {/* Right Column: Comments Section */}
-          <CommentSection comments={mockComments} />
+          {/* Comments Section */}
+          <CommentSection 
+            comments={image.comments} 
+            imageId={image.id}
+            onCommentAdded={handleCommentAdded}
+          />
         </div>
       </main>
-
-      {/* <Footer /> */}
     </div>
   );
 }
