@@ -18,7 +18,6 @@ async function main() {
   const comment = await prisma.comment.create({
     data: {
       imageId: image.id,
-      authorName: "Alice",
       content: "Beautiful image!",
     },
   });

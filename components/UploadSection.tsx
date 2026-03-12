@@ -1,12 +1,93 @@
 'use client';
 
+import { useState } from 'react';
 import { ImagePlus, Upload as UploadIcon, FileEdit, Send } from 'lucide-react';
-import { Upload, Input, Button, ConfigProvider } from 'antd';
+import { Upload, Input, Button, ConfigProvider, App } from 'antd';
+import type { UploadFile, RcFile } from 'antd/es/upload/interface';
 
 const { Dragger } = Upload;
 const { TextArea } = Input;
 
-export default function UploadSection() {
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+
+interface UploadSectionProps {
+  onUploadSuccess?: () => void;
+}
+
+export default function UploadSection({ onUploadSuccess }: UploadSectionProps) {
+  const { message } = App.useApp();
+  const [file, setFile] = useState<File | null>(null);
+  const [caption, setCaption] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+
+  const beforeUpload = (file: RcFile) => {
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      message.error('Only JPG and PNG files are allowed!');
+      return false;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      message.error('File size must be less than 10MB!');
+      return false;
+    }
+
+    setFile(file);
+    return false; // Prevent auto-upload
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      message.error('Please select an image to upload');
+      return;
+    }
+
+    if (!caption.trim()) {
+      message.error('Please add a caption for your photo');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('caption', caption.trim());
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      message.success('Photo posted successfully!');
+      
+      // Clear form
+      setFile(null);
+      setCaption('');
+      setFileList([]);
+      
+      // Notify parent to refresh
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload photo';
+      message.error(errorMessage);
+      console.error('Upload error:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <section className="mb-16 flex flex-col items-center">
       <div className="text-center mb-8">
@@ -36,7 +117,15 @@ export default function UploadSection() {
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Share a Photo</h3>
               </div>
               <div className="flex-1 min-h-[180px] flex flex-col">
-                <Dragger multiple={false} className="bg-gray-50/50" style={{ padding: '2rem' }}>
+                <Dragger
+                  multiple={false}
+                  beforeUpload={beforeUpload}
+                  fileList={fileList}
+                  onChange={({ fileList }) => setFileList(fileList)}
+                  className="bg-gray-50/50"
+                  style={{ padding: '2rem' }}
+                  disabled={uploading}
+                >
                   <div className="ant-upload-drag-icon flex justify-center">
                     <div className="w-14 h-14 bg-white shadow-sm rounded-xl flex items-center justify-center border border-gray-100">
                       <UploadIcon className="text-indigo-600 w-8 h-8" />
@@ -58,9 +147,12 @@ export default function UploadSection() {
               </div>
               <div className="flex-1 flex flex-col">
                 <TextArea
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
                   className="flex-1 text-sm py-4 px-5"
                   placeholder="Tell a story about this photo..."
                   style={{ resize: 'none' }}
+                  disabled={uploading}
                 />
               </div>
             </div>
@@ -69,11 +161,14 @@ export default function UploadSection() {
           <div className="px-8 pb-8 pt-2 flex justify-end">
             <Button 
               type="primary" 
-              size="large" 
-              icon={<Send className="w-4 h-4" />} 
+              size="large"
+              icon={<Send className="w-4 h-4" />}
               className="bg-linear-to-r from-indigo-500 to-fuchsia-500 border-0 h-12 px-10 rounded-xl font-bold text-base shadow-lg shadow-indigo-200 flex items-center"
+              onClick={handleUpload}
+              loading={uploading}
+              disabled={!file || !caption.trim() || uploading}
             >
-              Post Photo
+              {uploading ? 'Posting...' : 'Post Photo'}
             </Button>
           </div>
         </ConfigProvider>

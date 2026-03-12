@@ -17,7 +17,7 @@ export default function CommentSection({ comments }: CommentSectionProps) {
           {comments.map((comment) => (
             <div key={comment.id} className="flex flex-col">
               <div className="bg-gray-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600">{comment.text}</p>
+                <p className="text-sm text-gray-600">{comment.content}</p>
               </div>
             </div>
           ))}

@@ -11,13 +11,13 @@ const mockPhoto: Photo = {
   imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCn2DWCuojo9IpsrA9NK5s7Yl4gxBigyBJT39YBX51Hudr1bAJsqeu2bG3VtAL4WGT_ObtKKDUNLRQnZjL8997B4ZSrH9L-C8ahydSlR0gPmm4FblRy_3mIl4-b7p6Kgb0mLPcHczUXbb_gkOGWcgF5GQMQ642Ad4FvIKvy1-aBlbqLdAl3xgGdOA0JdxgmMlgbAcc_qJdJT6r0T-Qb3S0ob72utzAYudUj1YYAl1pH1Sk45768jPRbhHTvdt-6SO-v3xdyKa3ZpNGt',
   caption: 'Beautiful mountain landscape at sunrise',
   commentsCount: 48,
-  likesCount: '1.2k',
+  createdAt: new Date().toISOString(),
 };
 
 const mockComments: Comment[] = [
-  { id: 'c1', text: 'The lighting in this is absolutely incredible. What lens did you use for this shot?' },
-  { id: 'c2', text: 'Stunning composition. The reflection is crystal clear.' },
-  { id: 'c3', text: 'This makes me want to visit this place immediately. Great work!' },
+  { id: 'c1', imageId: '1', content: 'The lighting in this is absolutely incredible. What lens did you use for this shot?', createdAt: new Date().toISOString() },
+  { id: 'c2', imageId: '1', content: 'Stunning composition. The reflection is crystal clear.', createdAt: new Date().toISOString() },
+  { id: 'c3', imageId: '1', content: 'This makes me want to visit this place immediately. Great work!', createdAt: new Date().toISOString() },
 ];
 
 export default function PhotoDetail() {
@@ -44,11 +44,10 @@ export default function PhotoDetail() {
                   <div className="flex gap-6">
                     <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors">
                       <Heart className="w-5 h-5" />
-                      <span className="font-bold">{mockPhoto.likesCount}</span>
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors">
                       <MessageCircle className="w-5 h-5" />
-                      <span className="font-bold">{mockPhoto.commentsCount}</span>
+                      <span className="font-bold">{mockPhoto.commentsCount} comments</span>
                     </button>
                   </div>
                   <div className="flex gap-4">
