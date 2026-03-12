@@ -9,10 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/nextjs-registry": "^1.3.0",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "antd": "^6.3.2",
     "cloudinary": "^2.9.0",
+    "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "next-cloudinary": "^6.17.5",
     "react": "19.2.3",
