@@ -40,7 +40,6 @@ export default function CommentSection({ comments, imageId, onCommentAdded }: Co
       message.success('Comment posted successfully!');
       setNewComment('');
       
-      // Notify parent to refresh
       if (onCommentAdded) {
         onCommentAdded();
       }
